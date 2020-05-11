@@ -3,101 +3,113 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-public class InputManager : MonoBehaviour
+namespace Albarnie.InputManager
 {
-    public static InputManager manager;
-
-    public InputActionMap inputs = new InputActionMap();
-
-    private void Awake()
+    public class InputManager : MonoBehaviour
     {
-        if(manager == null)
+        public static InputManager manager;
+
+        public InputActionMap inputs = new InputActionMap();
+
+        private void Awake()
         {
-            manager = this;
-            DontDestroyOnLoad(this);
+            if (manager == null)
+            {
+                manager = this;
+                DontDestroyOnLoad(this);
+            }
+            else if (manager != this)
+            {
+                Destroy(gameObject);
+            }
         }
-        else if(manager != this)
+
+        private void OnEnable()
         {
-            Destroy(gameObject);
+            inputs.Enable();
         }
-        inputs.Enable();
+
+        private void OnDisable()
+        {
+            inputs.Disable();
+        }
+
+        public void AddInput(string inputName, OnRecieveInput onRecieveInput, InputType type = InputType.OnStarted)
+        {
+            switch (type)
+            {
+                case InputType.OnPerformed:
+                    inputs.FindAction(inputName).performed += ctx => onRecieveInput(ctx);
+                    break;
+                case InputType.OnStarted:
+                    inputs.FindAction(inputName).started += ctx => onRecieveInput(ctx);
+                    break;
+                case InputType.OnCancelled:
+                    inputs.FindAction(inputName).canceled += ctx => onRecieveInput(ctx);
+                    break;
+            }
+        }
+
+        public void RemoveInput(string inputName, OnRecieveInput onRecieveInput, InputType type = InputType.OnStarted)
+        {
+            switch (type)
+            {
+                case InputType.OnPerformed:
+                    inputs.FindAction(inputName).performed -= ctx => onRecieveInput(ctx);
+                    break;
+                case InputType.OnStarted:
+                    inputs.FindAction(inputName).started -= ctx => onRecieveInput(ctx);
+                    break;
+                case InputType.OnCancelled:
+                    inputs.FindAction(inputName).canceled -= ctx => onRecieveInput(ctx);
+                    break;
+            }
+        }
+
+        public void AddEvent(string inputName, System.Action onRecieveInput, InputType type = InputType.OnStarted)
+        {
+            switch (type)
+            {
+                case InputType.OnPerformed:
+                    inputs.FindAction(inputName).performed += ctx => onRecieveInput();
+                    break;
+                case InputType.OnStarted:
+                    inputs.FindAction(inputName).started += ctx => onRecieveInput();
+                    break;
+                case InputType.OnCancelled:
+                    inputs.FindAction(inputName).canceled += ctx => onRecieveInput();
+                    break;
+            }
+        }
+
+        public void RemoveEvent(string inputName, System.Action onRecieveInput, InputType type = InputType.OnStarted)
+        {
+            switch (type)
+            {
+                case InputType.OnPerformed:
+                    inputs.FindAction(inputName).performed -= ctx => onRecieveInput();
+                    break;
+                case InputType.OnStarted:
+                    inputs.FindAction(inputName).started -= ctx => onRecieveInput();
+                    break;
+                case InputType.OnCancelled:
+                    inputs.FindAction(inputName).canceled -= ctx => onRecieveInput();
+                    break;
+            }
+        }
+
+        public InputAction GetInput(string inputName)
+        {
+            return inputs.FindAction(inputName);
+        }
     }
 
-    public void AddInput(string inputName, OnRecieveInput onRecieveInput, InputType type = InputType.OnStarted)
+    public delegate void OnRecieveInput(InputAction.CallbackContext ctx);
+
+    public enum InputType
     {
-        switch (type)
-        {
-            case InputType.OnPerformed:
-                inputs.FindAction(inputName).performed += ctx => onRecieveInput(ctx);
-                break;
-            case InputType.OnStarted:
-                inputs.FindAction(inputName).started += ctx => onRecieveInput(ctx);
-                break;
-            case InputType.OnCancelled:
-                inputs.FindAction(inputName).canceled += ctx => onRecieveInput(ctx);
-                break;
-        }
+        OnPerformed,
+        OnStarted,
+        OnCancelled
     }
-
-    public void RemoveInput (string inputName, OnRecieveInput onRecieveInput, InputType type = InputType.OnStarted)
-    {
-        switch (type)
-        {
-            case InputType.OnPerformed:
-                inputs.FindAction(inputName).performed -= ctx => onRecieveInput(ctx);
-                break;
-            case InputType.OnStarted:
-                inputs.FindAction(inputName).started -= ctx => onRecieveInput(ctx);
-                break;
-            case InputType.OnCancelled:
-                inputs.FindAction(inputName).canceled -= ctx => onRecieveInput(ctx);
-                break;
-        }
-    }
-
-    public void AddEvent(string inputName, System.Action onRecieveInput, InputType type = InputType.OnStarted)
-    {
-        switch (type)
-        {
-            case InputType.OnPerformed:
-                inputs.FindAction(inputName).performed += ctx => onRecieveInput();
-                break;
-            case InputType.OnStarted:
-                inputs.FindAction(inputName).started += ctx => onRecieveInput();
-                break;
-            case InputType.OnCancelled:
-                inputs.FindAction(inputName).canceled += ctx => onRecieveInput();
-                break;
-        }
-    }
-
-    public void RemoveEvent(string inputName, System.Action onRecieveInput, InputType type = InputType.OnStarted)
-    {
-        switch (type)
-        {
-            case InputType.OnPerformed:
-                inputs.FindAction(inputName).performed -= ctx => onRecieveInput();
-                break;
-            case InputType.OnStarted:
-                inputs.FindAction(inputName).started -= ctx => onRecieveInput();
-                break;
-            case InputType.OnCancelled:
-                inputs.FindAction(inputName).canceled -= ctx => onRecieveInput();
-                break;
-        }
-    }
-
-    public InputAction GetInput (string inputName)
-    {
-        return inputs.FindAction(inputName);
-    }
-}
-
-public delegate void OnRecieveInput (InputAction.CallbackContext ctx);
-
-public enum InputType
-{
-    OnPerformed,
-    OnStarted,
-    OnCancelled
 }
